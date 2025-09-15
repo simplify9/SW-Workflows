@@ -83,15 +83,33 @@ Build and Test:
 - `api-key` (required): API key for the NuGet feed
 - `nuget-source` (required): NuGet feed/source URL
 
-**Usage Example:**
+**Common NuGet Sources:**
+- **NuGet.org (public)**: `https://api.nuget.org/v3/index.json`
+- **GitHub Packages**: `https://nuget.pkg.github.com/OWNER/index.json`
+- **Azure DevOps**: `https://pkgs.dev.azure.com/ORG/_packaging/FEED/nuget/v3/index.json`
+
+**Usage Examples:**
+
+Push to NuGet.org:
 ```yaml
-- name: Pack and Push NuGet
+- name: Pack and Push to NuGet.org
   uses: simplify9/SW-Workflows/actions/dotnet-pack-push@main
   with:
     project: 'src/MyLibrary/MyLibrary.csproj'
     version: ${{ steps.version.outputs.version }}
     api-key: ${{ secrets.NUGET_API_KEY }}
     nuget-source: 'https://api.nuget.org/v3/index.json'
+```
+
+Push to GitHub Packages:
+```yaml
+- name: Pack and Push to GitHub Packages
+  uses: simplify9/SW-Workflows/actions/dotnet-pack-push@main
+  with:
+    project: 'src/MyLibrary/MyLibrary.csproj'
+    version: ${{ steps.version.outputs.version }}
+    api-key: ${{ secrets.GITHUB_TOKEN }}
+    nuget-source: 'https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json'
 ```
 
 ### 🏷️ tag-github-origin

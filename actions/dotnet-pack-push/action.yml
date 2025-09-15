@@ -25,14 +25,28 @@ runs:
       shell: bash
     - name: Push NuGet package
       run: |
+        # Validate required inputs
+        if [ -z "${{ inputs.api-key }}" ]; then
+          echo "Error: API key is required but not provided!"
+          exit 1
+        fi
+        
+        if [ -z "${{ inputs.nuget-source }}" ]; then
+          echo "Error: NuGet source is required but not provided!"
+          exit 1
+        fi
+        
         # Check if any nupkg files were created
         if ! ls ./nupkg/*.nupkg 1> /dev/null 2>&1; then
           echo "Error: No NuGet packages found in ./nupkg/"
           exit 1
         fi
         
-        echo "Pushing NuGet packages to ${{ inputs.nuget-source }}..."
-        dotnet nuget push ./nupkg/*.nupkg --api-key ${{ inputs.api-key }} --source ${{ inputs.nuget-source }} --skip-duplicate
+        echo "Pushing NuGet packages to: ${{ inputs.nuget-source }}"
+        echo "Using provided API key for authentication"
+        
+        # Push with explicit source parameter
+        dotnet nuget push "./nupkg/*.nupkg" --api-key "${{ inputs.api-key }}" --source "${{ inputs.nuget-source }}" --skip-duplicate
       shell: bash
 inputs:
   project:
