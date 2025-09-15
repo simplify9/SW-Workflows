@@ -6,17 +6,43 @@ runs:
     - name: Determine semantic version
       id: semver
       run: |
+        # Validate inputs
         major=${{ inputs.major }}
         minor=${{ inputs.minor }}
-        prefix="$major.$minor."
-        latest_tag=$(git tag --list "$prefix*" | sort -V | tail -n1)
-        if [[ -z "$latest_tag" ]]; then
-          patch=1
-        else
-          patch=$(echo "$latest_tag" | awk -F. '{print $3+1}')
+        
+        if ! [[ "$major" =~ ^[0-9]+$ ]]; then
+          echo "Error: Major version must be a number, got: $major"
+          exit 1
         fi
+        
+        if ! [[ "$minor" =~ ^[0-9]+$ ]]; then
+          echo "Error: Minor version must be a number, got: $minor"
+          exit 1
+        fi
+        
+        echo "Looking for existing tags with prefix: $major.$minor.*"
+        prefix="$major.$minor."
+        
+        # Get latest tag matching the pattern
+        latest_tag=$(git tag --list "$prefix*" | sort -V | tail -n1)
+        
+        if [[ -z "$latest_tag" ]]; then
+          patch=0
+          echo "No existing tags found for $major.$minor.*, starting with patch version 0"
+        else
+          echo "Found latest tag: $latest_tag"
+          # Extract patch version and increment
+          patch=$(echo "$latest_tag" | awk -F. '{print $3}')
+          if ! [[ "$patch" =~ ^[0-9]+$ ]]; then
+            echo "Warning: Could not parse patch version from tag $latest_tag, starting with 0"
+            patch=0
+          else
+            patch=$((patch + 1))
+          fi
+        fi
+        
         version="$major.$minor.$patch"
-        echo "Computed version: $version"
+        echo "Computed next version: $version"
         echo "version=$version" >> $GITHUB_OUTPUT
       shell: bash
 inputs:

@@ -5,14 +5,34 @@ runs:
   steps:
     - name: Pack NuGet package
       run: |
+        # Ensure the project file exists
+        if [ ! -f "${{ inputs.project }}" ]; then
+          echo "Error: Project file '${{ inputs.project }}' not found!"
+          exit 1
+        fi
+        
+        # Create output directory
+        mkdir -p ./nupkg
+        
+        # Pack with or without version
         if [ -z "${{ inputs.version }}" ]; then
-          dotnet pack ${{ inputs.project }} --configuration ${{ inputs.configuration }} --no-build --output ./nupkg
+          echo "Packing ${{ inputs.project }} without explicit version..."
+          dotnet pack "${{ inputs.project }}" --configuration ${{ inputs.configuration }} --no-build --output ./nupkg
         else
-          dotnet pack ${{ inputs.project }} --configuration ${{ inputs.configuration }} --no-build --output ./nupkg /p:Version=${{ inputs.version }}
+          echo "Packing ${{ inputs.project }} with version ${{ inputs.version }}..."
+          dotnet pack "${{ inputs.project }}" --configuration ${{ inputs.configuration }} --no-build --output ./nupkg /p:Version=${{ inputs.version }}
         fi
       shell: bash
     - name: Push NuGet package
-      run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ inputs.api-key }} --source ${{ inputs.nuget-source }}
+      run: |
+        # Check if any nupkg files were created
+        if ! ls ./nupkg/*.nupkg 1> /dev/null 2>&1; then
+          echo "Error: No NuGet packages found in ./nupkg/"
+          exit 1
+        fi
+        
+        echo "Pushing NuGet packages to ${{ inputs.nuget-source }}..."
+        dotnet nuget push ./nupkg/*.nupkg --api-key ${{ inputs.api-key }} --source ${{ inputs.nuget-source }} --skip-duplicate
       shell: bash
 inputs:
   project:

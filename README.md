@@ -12,7 +12,7 @@ This repository contains a collection of reusable GitHub Actions designed to str
 
 **Purpose:** Automatically computes the next semantic version based on major/minor inputs and existing git tags.
 
-**Location:** `actions/determine-semver.yml`
+**Location:** `actions/determine-semver`
 
 **Inputs:**
 - `major` (required): Major version number
@@ -34,54 +34,47 @@ This repository contains a collection of reusable GitHub Actions designed to str
   run: echo "Next version will be ${{ steps.version.outputs.version }}"
 ```
 
-### 🏗️ dotnet-restore-build
+### 🏗️ dotnet-build
 
-**Purpose:** Restores dependencies and builds .NET projects with configurable options.
+**Purpose:** Restores, builds, and optionally tests .NET projects. This is a unified action that can handle both build-only and build+test scenarios.
 
-**Location:** `actions/dotnet-restore-build.yml`
+**Location:** `actions/dotnet-build`
 
 **Inputs:**
 - `projects` (optional): Project(s) to restore and build (wildcards allowed, default: `**/*.csproj`)
+- `test-projects` (optional): Test project(s) to run (wildcards allowed, default: `**/*UnitTests/*.csproj`)
 - `configuration` (optional): Build configuration (default: `Release`)
 - `dotnet-version` (optional): Version of .NET SDK to use (default: `8.0.x`)
+- `run-tests` (optional): Whether to run tests after building (default: `true`)
 
-**Usage Example:**
+**Usage Examples:**
+
+Build only:
 ```yaml
 - name: Build Projects
-  uses: simplify9/SW-Workflows/actions/dotnet-restore-build@main
+  uses: simplify9/SW-Workflows/actions/dotnet-build@main
   with:
     projects: 'src/**/*.csproj'
-    configuration: 'Release'
-    dotnet-version: '8.0.x'
+    run-tests: 'false'
 ```
 
-### 🧪 dotnet-restore-build-test
-
-**Purpose:** Restores, builds, and tests .NET projects in a single workflow step.
-
-**Location:** `actions/dotnet-restore-build-test.yml`
-
-**Inputs:**
-- `projects` (optional): Project(s) to restore and build (wildcards allowed, default: `**/*.csproj`)
-- `test-projects` (required): Test project(s) to run (wildcards allowed, default: `**/*UnitTests/*.csproj`)
-- `configuration` (optional): Build configuration (default: `Release`)
-- `dotnet-version` (optional): Version of .NET SDK to use (default: `8.0.x`)
-
-**Usage Example:**
+Build and Test:
 ```yaml
 - name: Build and Test
-  uses: simplify9/SW-Workflows/actions/dotnet-restore-build-test@main
+  uses: simplify9/SW-Workflows/actions/dotnet-build@main
   with:
     projects: 'src/**/*.csproj'
     test-projects: 'tests/**/*Tests.csproj'
-    configuration: 'Release'
+    run-tests: 'true'
 ```
+
+> **Note:** This action is self-contained and doesn't depend on other actions in this repository, making it safe to use from external repositories.
 
 ### 📦 dotnet-pack-push
 
 **Purpose:** Packs a .NET project and pushes the resulting NuGet package to a specified feed.
 
-**Location:** `actions/dotnet-pack-push.yml`
+**Location:** `actions/dotnet-pack-push`
 
 **Inputs:**
 - `project` (required): Path to the .csproj file to pack
@@ -105,7 +98,7 @@ This repository contains a collection of reusable GitHub Actions designed to str
 
 **Purpose:** Creates a git tag on the GitHub repository using the REST API.
 
-**Location:** `actions/tag-github-origin.yml`
+**Location:** `actions/tag-github-origin`
 
 **Inputs:**
 - `github-token` (required): GitHub token for authentication
@@ -146,10 +139,11 @@ jobs:
         fetch-depth: 0
     
     - name: Build and Test
-      uses: simplify9/SW-Workflows/actions/dotnet-restore-build-test@main
+      uses: simplify9/SW-Workflows/actions/dotnet-build@main
       with:
         projects: 'src/**/*.csproj'
         test-projects: 'tests/**/*Tests.csproj'
+        run-tests: 'true'
 
   release:
     if: github.ref == 'refs/heads/main'
@@ -168,9 +162,10 @@ jobs:
         minor: '0'
     
     - name: Build
-      uses: simplify9/SW-Workflows/actions/dotnet-restore-build@main
+      uses: simplify9/SW-Workflows/actions/dotnet-build@main
       with:
         projects: 'src/**/*.csproj'
+        run-tests: 'false'
     
     - name: Pack and Push
       uses: simplify9/SW-Workflows/actions/dotnet-pack-push@main
