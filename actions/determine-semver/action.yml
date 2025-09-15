@@ -23,8 +23,25 @@ runs:
         echo "Looking for existing tags with prefix: $major.$minor.*"
         prefix="$major.$minor."
         
+        # Ensure we have all tags (in case of shallow checkout)
+        echo "Fetching all tags from remote..."
+        git fetch --tags --unshallow 2>/dev/null || git fetch --tags 2>/dev/null || echo "Could not fetch tags"
+        
+        # List all tags for debugging
+        echo "All available tags:"
+        git tag --list | sort -V || echo "No tags found"
+        
         # Get latest tag matching the pattern
-        latest_tag=$(git tag --list "$prefix*" | sort -V | tail -n1)
+        echo "Searching for tags matching pattern: $prefix*"
+        matching_tags=$(git tag --list "$prefix*" | sort -V)
+        if [[ -n "$matching_tags" ]]; then
+          echo "Found matching tags:"
+          echo "$matching_tags"
+        else
+          echo "No tags found matching pattern: $prefix*"
+        fi
+        
+        latest_tag=$(echo "$matching_tags" | tail -n1)
         
         if [[ -z "$latest_tag" ]]; then
           patch=0
@@ -37,7 +54,9 @@ runs:
             echo "Warning: Could not parse patch version from tag $latest_tag, starting with 0"
             patch=0
           else
+            echo "Current patch version: $patch"
             patch=$((patch + 1))
+            echo "Incremented patch version: $patch"
           fi
         fi
         
