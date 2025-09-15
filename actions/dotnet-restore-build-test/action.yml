@@ -4,7 +4,7 @@ runs:
   using: "composite"
   steps:
     - name: Restore and Build
-      uses: ../dotnet-restore-build
+      uses: simplify9/sw-workflows/actions/dotnet-restore-build@main
       with:
         projects: ${{ inputs.projects }}
         configuration: ${{ inputs.configuration }}
