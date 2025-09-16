@@ -72,14 +72,14 @@ Build and Test:
 
 ### 📦 dotnet-pack-push
 
-**Purpose:** Packs a .NET project and pushes the resulting NuGet package to a specified feed.
+**Purpose:** Packs .NET project(s) and pushes the resulting NuGet package(s) to a specified feed. Supports both single and multiple projects.
 
 **Location:** `actions/dotnet-pack-push`
 
 **Inputs:**
-- `project` (required): Path to the .csproj file to pack
+- `projects` (required): Path(s) to .csproj file(s) to pack (supports wildcards and multiple projects)
 - `configuration` (optional): Build configuration (default: `Release`)
-- `version` (optional): Semantic version for the NuGet package
+- `version` (optional): Semantic version for the NuGet package(s)
 - `api-key` (required): API key for the NuGet feed
 - `nuget-source` (required): NuGet feed/source URL
 
@@ -90,12 +90,34 @@ Build and Test:
 
 **Usage Examples:**
 
-Push to NuGet.org:
+Single project:
 ```yaml
-- name: Pack and Push to NuGet.org
+- name: Pack and Push Single Project
   uses: simplify9/SW-Workflows/actions/dotnet-pack-push@main
   with:
-    project: 'src/MyLibrary/MyLibrary.csproj'
+    projects: 'src/MyLibrary/MyLibrary.csproj'
+    version: ${{ steps.version.outputs.version }}
+    api-key: ${{ secrets.NUGET_API_KEY }}
+    nuget-source: 'https://api.nuget.org/v3/index.json'
+```
+
+Multiple projects with wildcards:
+```yaml
+- name: Pack and Push Multiple Projects
+  uses: simplify9/SW-Workflows/actions/dotnet-pack-push@main
+  with:
+    projects: 'src/*/*.csproj'
+    version: ${{ steps.version.outputs.version }}
+    api-key: ${{ secrets.NUGET_API_KEY }}
+    nuget-source: 'https://api.nuget.org/v3/index.json'
+```
+
+All packable projects:
+```yaml
+- name: Pack and Push All Projects
+  uses: simplify9/SW-Workflows/actions/dotnet-pack-push@main
+  with:
+    projects: '**/*.csproj'
     version: ${{ steps.version.outputs.version }}
     api-key: ${{ secrets.NUGET_API_KEY }}
     nuget-source: 'https://api.nuget.org/v3/index.json'
@@ -106,7 +128,7 @@ Push to GitHub Packages:
 - name: Pack and Push to GitHub Packages
   uses: simplify9/SW-Workflows/actions/dotnet-pack-push@main
   with:
-    project: 'src/MyLibrary/MyLibrary.csproj'
+    projects: 'src/MyLibrary/MyLibrary.csproj'
     version: ${{ steps.version.outputs.version }}
     api-key: ${{ secrets.GITHUB_TOKEN }}
     nuget-source: 'https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json'
@@ -188,7 +210,7 @@ jobs:
     - name: Pack and Push
       uses: simplify9/SW-Workflows/actions/dotnet-pack-push@main
       with:
-        project: 'src/MyLibrary/MyLibrary.csproj'
+        projects: 'src/*/*.csproj'
         version: ${{ steps.version.outputs.version }}
         api-key: ${{ secrets.NUGET_API_KEY }}
         nuget-source: 'https://api.nuget.org/v3/index.json'
