@@ -88,10 +88,12 @@ runs:
         VALUES_FILE="${{ inputs.chart-path }}/values.yaml"
         
         if [ -n "${{ inputs.image-repository }}" ]; then
-          echo "Updating image repository to: ${{ inputs.image-repository }}"
+          # Convert image repository to lowercase
+          IMAGE_REPO_LOWER=$(echo "${{ inputs.image-repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "Updating image repository to: ${IMAGE_REPO_LOWER} (lowercase)"
           if grep -q "^image:" "$VALUES_FILE"; then
-            # Update existing image.repository
-            sed -i "/^image:/,/^[[:space:]]*repository:/ s|repository:.*|repository: ${{ inputs.image-repository }}|" "$VALUES_FILE"
+            # Update existing image.repository with lowercase value
+            sed -i "/^image:/,/^[[:space:]]*repository:/ s|repository:.*|repository: ${IMAGE_REPO_LOWER}|" "$VALUES_FILE"
           else
             echo "Warning: image.repository not found in values.yaml"
           fi
